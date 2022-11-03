@@ -13,24 +13,17 @@ class ColorizeMixin:
         return "\33[{code}m".format(code=code)
 
     def __str__(self):
-
-        string_to_return = ""
-        for k, v in self.__dict__.items():
-            if string_to_return == "":
-                string_to_return = str(v)
-            else:
-                string_to_return = string_to_return + " | " + str(v)
-        return self.color_text() + string_to_return + "\33[0m"
+        return f"{self.color_text()}{self.__repr__()}\33[0m"
 
 
-class JSONconverter:
+class JsonConverter:
     """Динамически создает атрибуты экземпляра класса из атрибутов JSON-объекта. 
     Через _check_keyword к названию атрибутов, являющихся ключевыми
     словами python, добавляется _. """
 
     def __init__(self, dic: dict) -> None:
         for k, v in dic.items():
-            k = self._check_keyword(k)
+            k = self._check_keyword(k)  # проверка на ключевые слова питона
             self.__setattr__(k, self.dict2attr(v))
 
     def _check_keyword(self, item: str) -> str:
@@ -40,14 +33,14 @@ class JSONconverter:
 
     def dict2attr(self, v):
         if isinstance(v, dict):
-            return JSONconverter(v)
+            return JsonConverter(v)
         elif isinstance(v, list):
-            return [JSONconverter(f) if isinstance(f, dict) else f for f in v]
+            return [JsonConverter(f) if isinstance(f, dict) else f for f in v]
         else:
             return v
 
 
-class Advert(ColorizeMixin, JSONconverter):
+class Advert(ColorizeMixin, JsonConverter):
     """Класс проверяет наличие и значение полей 'Price' и 'Title'. 
     Через super обращается к методам других классов, помогающих 
     конвертировать атрибуты JSON-объекта в атрибуты экземпляра класса"""
@@ -57,9 +50,11 @@ class Advert(ColorizeMixin, JSONconverter):
             raise ValueError("provide title, please")
         if "price" not in dic.keys():
             self._price = 0
-        super(Advert, self).__init__(dic)
+        super(Advert, self).__init__(
+            dic
+        )  # обращаемся к унаследованному методу инит из другого кдасса
 
-    @property
+    @property  # декоратор к атрибуту цены
     def price(self):
         return self._price
 
@@ -70,9 +65,12 @@ class Advert(ColorizeMixin, JSONconverter):
         else:
             self._price = price
 
+    def __repr__(self):
+        return f"{self.title} | {self.price}"
 
-if __name__ == "__main__":
-    lesson_str = """
+
+if __name__ == "__main__":  # строковое представление словаря
+    lesson_str = """ 
     {
         "title": "python",
         "price": 5,
