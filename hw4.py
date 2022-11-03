@@ -20,7 +20,7 @@ class ColorizeMixin:
                 string_to_return = str(v)
             else:
                 string_to_return = string_to_return + " | " + str(v)
-        return self.color_text() + string_to_return
+        return self.color_text() + string_to_return + "\33[0m"
 
 
 class JSONconverter:
