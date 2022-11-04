@@ -22,22 +22,18 @@ class JsonConverter:
     словами python, добавляется _. """
 
     def __init__(self, dic: dict) -> None:
-        for k, v in dic.items():
-            k = self._check_keyword(k)  # проверка на ключевые слова питона
-            self.__setattr__(k, self.dict2attr(v))
+        for key, value in dic.items():
+            key = key + "_" if iskeyword(key) else key
+            self.__setattr__(key, self.JsonAttr2ClassAttr(value))
 
-    def _check_keyword(self, item: str) -> str:
-        if iskeyword(item):
-            return item + "_"
-        return item
-
-    def dict2attr(self, v):
-        if isinstance(v, dict):
-            return JsonConverter(v)
-        elif isinstance(v, list):
-            return [JsonConverter(f) if isinstance(f, dict) else f for f in v]
+    def JsonAttr2ClassAttr(self, value):
+        if isinstance(value, dict):
+            return JsonConverter(value)
+        elif isinstance(value, list):
+            return [JsonConverter(element) if isinstance(element, dict)
+                    else element for element in value]
         else:
-            return v
+            return value
 
 
 class Advert(ColorizeMixin, JsonConverter):
@@ -50,11 +46,9 @@ class Advert(ColorizeMixin, JsonConverter):
             raise ValueError("provide title, please")
         if "price" not in dic.keys():
             self._price = 0
-        super(Advert, self).__init__(
-            dic
-        )  # обращаемся к унаследованному методу инит из другого кдасса
+        super(Advert, self).__init__(dic)
 
-    @property  # декоратор к атрибуту цены
+    @property
     def price(self):
         return self._price
 
@@ -69,7 +63,7 @@ class Advert(ColorizeMixin, JsonConverter):
         return f"{self.title} | {self.price}"
 
 
-if __name__ == "__main__":  # строковое представление словаря
+if __name__ == "__main__":
     lesson_str = """
     {
         "title": "python",
@@ -83,24 +77,24 @@ if __name__ == "__main__":  # строковое представление сл
     lesson = json.loads(lesson_str)
     lesson_ad = Advert(lesson)
 
-# обращаемся к атрибуту location.address
-print('Check 1: "обращаться ĸ атрибутам можно через точĸу"')
-print(lesson_ad.location.address)
+    # обращаемся к атрибуту location.address
+    print('Check 1: "обращаться ĸ атрибутам можно через точĸу"')
+    print(lesson_ad.location.address)
 
-# к названия атрибутов, являющихся ключевыми словами python,
-# в конце название добавляем _
-print('\nCheck 2: "к атрибутам - ключевым словам добавлилось _"')
-print(lesson_ad.class_)
+    # к названия атрибутов, являющихся ключевыми словами python,
+    # в конце название добавляем _
+    print('\nCheck 2: "к атрибутам - ключевым словам добавлилось _"')
+    print(lesson_ad.class_)
 
-# проверяет, что значение цены не отрицательное и при
-# создании объекта и при присваивании
-print('\nCheck 3: "ошибка при присваивании отрицательной цены"')
-try:
-    lesson_ad.price = -1
-except ValueError:
-    print("Error! Price must be >=0")
+    # проверяет, что значение цены не отрицательное и при
+    # создании объекта и при присваивании
+    print('\nCheck 3: "ошибка при присваивании отрицательной цены"')
+    try:
+        lesson_ad.price = -1
+    except ValueError:
+        print("Error! Price must be >=0")
 
-# проверяет, что возможно вывести в нужном формате объект класса
-print('\nCheck 4: "цветной вывод"')
-iphone_ad = Advert({"title": "iPhone X", "price": 100, "sale": "no"})
-print(iphone_ad)
+    # проверяет, что возможно вывести в нужном формате объект класса
+    print('\nCheck 4: "цветной вывод"')
+    iphone_ad = Advert({"title": "iPhone X", "price": 100})
+    print(iphone_ad)
